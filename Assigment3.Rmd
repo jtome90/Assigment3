@@ -1,0 +1,98 @@
+---
+title: "Assigment4"
+author: "Joaquin Tome"
+date: "9/20/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+```{r}
+install.packages ("nngeo")
+install.packages ("units")
+```
+```{r}
+library(sf)
+library(tidyverse)
+library(ggthemes)
+library(ggspatial)
+library(units)
+library(nngeo)
+```
+
+```{r}
+st_read ("LFTEA.geojson")
+```
+```{r}
+st_read ("LFTEA.geojson")
+```
+
+```{r}
+st_read ("Busstop.geojson")
+```
+
+```{r}
+st_read ("offices.geojson")
+```
+
+```{r}
+township<-st_read ("LFTEA.geojson")
+```
+```{r}
+parks<-st_read ("Parks.geojson")
+```
+
+```{r}
+Bustop<-st_read ("Busstop.geojson")
+```
+
+```{r}
+offices<-st_read("offices.geojson")
+```
+```{r}
+CT_state_plane <- "+proj=tmerc +lat_0=0 +lon_0=19 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +units=m +no_defs"
+
+Bustop <- Bustop %>%
+  st_transform(CT_state_plane)
+
+offices <- offices %>%
+  st_transform(CT_state_plane)
+
+parks <- parks %>% 
+  st_transform(CT_state_plane)
+
+township <- township %>%
+  st_transform(CT_state_plane)
+```
+
+```{r}
+ggplot(township) +
+  geom_sf(fill = "lightblue", color = NA) +
+  geom_sf(data = parks, color = "lightgreen", size = 0.01) +
+  geom_sf(data = Bustop, size = 0.01) +
+  geom_sf(data= offices, fill = NA, color = "gray") +
+  theme_map() +
+  annotation_scale()
+```
+
