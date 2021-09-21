@@ -1,7 +1,7 @@
 ---
-title: "Assigment4"
+title: "Assigment3"
 author: "Joaquin Tome"
-date: "9/20/2021"
+date: "9/21/2021"
 output: html_document
 ---
 
@@ -29,10 +29,6 @@ plot(pressure)
 
 Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
 ```{r}
-install.packages ("nngeo")
-install.packages ("units")
-```
-```{r}
 library(sf)
 library(tidyverse)
 library(ggthemes)
@@ -40,59 +36,111 @@ library(ggspatial)
 library(units)
 library(nngeo)
 ```
-
 ```{r}
-st_read ("LFTEA.geojson")
-```
-```{r}
-st_read ("LFTEA.geojson")
+Busstop <-st_read ("Busstop.geojson")
 ```
 
-```{r}
-st_read ("Busstop.geojson")
-```
-
-```{r}
-st_read ("offices.geojson")
-```
 
 ```{r}
 township<-st_read ("LFTEA.geojson")
 ```
-```{r}
-parks<-st_read ("Parks.geojson")
-```
 
 ```{r}
-Bustop<-st_read ("Busstop.geojson")
+Parks<-st_read ("Parks.geojson")
 ```
 
 ```{r}
 offices<-st_read("offices.geojson")
 ```
+
 ```{r}
 CT_state_plane <- "+proj=tmerc +lat_0=0 +lon_0=19 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +units=m +no_defs"
 
-Bustop <- Bustop %>%
-  st_transform(CT_state_plane)
-
-offices <- offices %>%
-  st_transform(CT_state_plane)
-
-parks <- parks %>% 
+Busstop <- Busstop %>%
   st_transform(CT_state_plane)
 
 township <- township %>%
+  st_transform(CT_state_plane)
+
+Parks <- Parks %>%
+  st_transform(CT_state_plane)
+
+offices <- offices %>%
   st_transform(CT_state_plane)
 ```
 
 ```{r}
 ggplot(township) +
-  geom_sf(fill = "lightblue", color = NA) +
-  geom_sf(data = parks, color = "lightgreen", size = 0.01) +
-  geom_sf(data = Bustop, size = 0.01) +
-  geom_sf(data= offices, fill = NA, color = "gray") +
+  geom_sf(fill = NA, color = "lightcoral") +
+  geom_sf(data = Parks, fill = "darkseagreen", color = NA) +
+  geom_sf(data = Busstop, color = "plum2", size = 0.1) +
+  geom_sf(data= offices, color = "lightblue2", size = 0.003) +
   theme_map() +
   annotation_scale()
+```
+```{r}
+township <-township %>%
+  mutate(num_Parks = lengths(st_covers(township, Parks)))
+
+ggplot(township) +
+  annotation_map_tile(zoomin = 0,progress="none",type="stamenbw")+
+  labs(caption = "Map tiles and data by Open Map") +
+  geom_sf(color = NA, 
+          aes(fill = num_Parks)) +
+  scale_fill_viridis_b(name = "Cape Town \nby number of Parks") +
+                       # breaks = seq(0, 6000, by = 500),
+                       # labels = seq(0, 6000, by = 500)) +
+  annotation_scale(location = "br") +
+  annotation_north_arrow(location = "tr",
+                         style = north_arrow_minimal()) +
+theme_map() +
+  theme(legend.position = "right", 
+  legend.background = element_rect(fill = alpha("white", 1), 
+                                         color = "gray"))
+```
+```{r}
+```
+
+
+```{r}
+township <- township %>%
+  mutate(area = set_units(st_area(township), km^2)) %>%
+  mutate(Parks_dens = as.numeric(num_Parks / area))
+
+ggplot(township) +
+  annotation_map_tile(zoomin = 0,progress="none",type="stamenbw")+
+  labs(caption = "Map tiles and data by Open Map") +
+  geom_sf(color = NA, 
+          aes(fill = Parks_dens)) +
+    scale_fill_viridis_c (name = 
+                           "Cape Town \nby parks density",
+                       breaks = breaks <- seq(0, 40, by = 5),
+                       labels = paste(prettyNum(breaks, big.mark = ","),
+                                      " parks density per square km")) +
+  annotation_scale(location = "br") +
+  annotation_north_arrow(location = "tr",
+                         style = north_arrow_minimal()) +
+theme_map() +
+  theme(legend.position = "right",
+    legend.background = element_rect(fill = alpha("white", 0.5), 
+                                            color = "gray"))
+```
+```{r}
+township_buffer <- st_buffer(township, dist = 30) %>%
+  st_union()
+
+ggplot(township_buffer) +
+  geom_sf() +
+  theme_map()
+```
+```{r}
+Parks_parking <- Parks[township_buffer,]
+  
+ggplot(township_buffer) +
+  geom_sf() +
+  geom_sf(data = Parks_parking, 
+          color = "darkgreen", 
+          size = 0.5) +
+  theme_map()
 ```
 
